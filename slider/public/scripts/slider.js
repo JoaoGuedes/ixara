@@ -13,20 +13,20 @@
         return result;
     };
 
-    var getCurrentPosition = function getCurrentPosition(mousePos, cursorWidth, containerWidth) {
-        if (mousePos - cursorWidth <= 0) {
+    var getCurrentPosition = function getCurrentPosition(mousePos, cursor, container) {
+        if (mousePos - cursor.clientWidth - container.getBoundingClientRect().left <= 0) {
             return 0;
-        } else if (mousePos > containerWidth) {
-            return containerWidth - cursorWidth;
+        } else if (mousePos - container.getBoundingClientRect().left > container.clientWidth) {
+            return container.clientWidth - cursor.clientWidth;
         } else {
-            return mousePos - cursorWidth;
+            return mousePos - cursor.clientWidth - container.getBoundingClientRect().left;
         }
     };
 
     var moveHandler = function moveHandler(event) {
         if (dragging) {
             var pos = event.clientX,
-                currentPos = getCurrentPosition(pos, cursor.clientWidth, container.clientWidth);
+                currentPos = getCurrentPosition(pos, cursor, container);
 
             console.log(getPosition(currentPos) * 255);
 
