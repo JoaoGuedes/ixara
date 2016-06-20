@@ -32,13 +32,15 @@ setValue - set the actual value of the slider **/
 
         getPosition(mousePos, cursor, slider) {
             let actualPos = mousePos - slider.getBoundingClientRect().left;
+            const endPos = slider.clientWidth - cursor.clientWidth;
+
             if (actualPos - cursor.clientWidth <= 0) {                                                      //mouse is behind lower limit
                 return 0;                                                                                   //...return start position
             } else if (actualPos > slider.clientWidth) {                                                    //mouse is after upper limit
-                return slider.clientWidth - cursor.clientWidth;                                             //...return end position
+                return endPos;                                                                              //...return end position
             } else {
                 const value = actualPos - cursor.clientWidth/2;                                             //mouse is somewhere in between
-                return Math.min(slider.clientWidth - cursor.clientWidth, this.quantize(value, this.step));  //...return end position or quantized step, whichever is smaller
+                return Math.min(endPos, this.quantize(value, this.step));                                   //...return end position or quantized step, whichever is smaller
             }
         }
 
