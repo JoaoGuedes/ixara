@@ -1,73 +1,160 @@
 'use strict';
 
-(function (window, undefined) {
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-    var cursor = document.querySelector('.cursor'),
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * getPercentage - return the percentage (0 - 1) representing the current slider position
+setPercentage - a method that takes a percentage (0 - 1) and sets the slider position accordingly
+getValue - return the actual value representing the current slider position
+setValue - set the actual value of the slider **/
+
+(function (window, document, undefined) {
+    var Slider = function () {
+        function Slider(selector, min, max, step) {
+            _classCallCheck(this, Slider);
+
+            this.container = document.querySelector(selector);
+
+            this.slider = document.createElement('div');
+            this.slider.className = 'slider';
+
+            this.cursor = document.createElement('span');
+            this.cursor.className = 'cursor';
+
+            this.slider.appendChild(this.cursor);
+            this.container.appendChild(this.slider);
+
+            this.dragging = false;
+            this.step = step;
+
+            this.addListeners();
+        }
+
+        _createClass(Slider, [{
+            key: 'getPosition',
+            value: function getPosition(mousePos, cursor, slider) {
+                if (mousePos - cursor.clientWidth - slider.getBoundingClientRect().left <= 0) {
+                    return 0;
+                } else if (mousePos - slider.getBoundingClientRect().left > slider.clientWidth) {
+                    return slider.clientWidth - cursor.clientWidth;
+                } else {
+                    var value = mousePos - cursor.clientWidth - slider.getBoundingClientRect().left;
+                    return Math.min(slider.clientWidth - cursor.clientWidth, this.quantize(value, this.step));
+                }
+            }
+        }, {
+            key: 'quantize',
+            value: function quantize(value, step) {
+                return Math.round(value / step) * step;
+            }
+        }, {
+            key: 'move',
+            value: function move(event) {
+                if (this.dragging) {
+                    var pos = event.clientX;
+                    var currentPos = this.getPosition(pos, this.cursor, this.slider);
+                    //this.getPosition(pos, this.cursor, this.container);
+                    //console.log(Math.round(getPosition(currentPos) * 100));
+                    //console.log(getPercentage(currentPos));
+                    this.cursor.style.left = currentPos + 'px';
+                }
+            }
+        }, {
+            key: 'addListeners',
+            value: function addListeners() {
+                var _this = this;
+
+                this.container.addEventListener('click', function (event) {
+                    _this.dragging = true;
+                    _this.move(event);
+                });
+
+                this.cursor.addEventListener('mousedown', function (event) {
+                    _this.dragging = true;
+                    _this.boundMove = _this.move.bind(_this); //To hold a reference for unregistering later
+                    document.addEventListener('mousemove', _this.boundMove);
+                });
+
+                document.addEventListener('mouseup', function (event) {
+                    _this.dragging = false;
+                    document.removeEventListener('mousemove', _this.boundMove);
+                });
+
+                this.cursor.addEventListener('touchstart', function (event) {
+                    _this.dragging = true;
+                });
+
+                this.cursor.addEventListener('touchend', function (event) {
+                    _this.dragging = false;
+                });
+
+                this.cursor.addEventListener('touchmove', function (event) {
+                    event.preventDefault();
+                    _this.move(event.changedTouches[0]);
+                });
+            }
+        }]);
+
+        return Slider;
+    }();
+
+    window.Slider = Slider;
+
+    /*let cursor = document.querySelector('#foo.cursor'),
         container = cursor.parentElement;
-
-    var dragging = false,
-        step = 30;
-
-    var getPercentage = function getPercentage(position) {
-        var result = position / (container.clientWidth - cursor.clientWidth);
+     let dragging = false, step = 30;
+     let getPercentage = (position) => {
+        let result = position / (container.clientWidth - cursor.clientWidth);
         return result * 100;
     };
-
-    var getCurrentPosition = function getCurrentPosition(mousePos, cursor, container) {
-        if (mousePos - cursor.clientWidth - container.getBoundingClientRect().left <= 0) {
+     let getCurrentPosition = (mousePos, cursor, container) => {
+        var leftOffset = container.getBoundingClientRect().left;
+        console.log(leftOffset);
+        if ((mousePos - cursor.clientWidth - container.getBoundingClientRect().left) <= 0) {
             return 0;
         } else if (mousePos - container.getBoundingClientRect().left > container.clientWidth) {
             return container.clientWidth - cursor.clientWidth;
         } else {
-            var value = mousePos - cursor.clientWidth - container.getBoundingClientRect().left;
+            const value = mousePos - cursor.clientWidth - container.getBoundingClientRect().left;
             return Math.min(container.clientWidth - cursor.clientWidth, quantize(value, step));
         }
     };
-
-    var quantize = function quantize(value, step) {
-        return Math.round(value / step) * step;
+     let quantize = (value, step) => {
+        return Math.round(value/step) * step;
     };
-
-    var moveHandler = function moveHandler(event) {
+     let moveHandler = (event) => {
         if (dragging) {
-            var pos = event.clientX,
+            let pos = event.clientX,
                 currentPos = getCurrentPosition(pos, cursor, container);
-
-            //console.log(Math.round(getPosition(currentPos) * 100));
-            console.log(getPercentage(currentPos));
-
-            cursor.style.left = currentPos + 'px';
+            console.log(pos);
+             //console.log(Math.round(getPosition(currentPos) * 100));
+            //console.log(getPercentage(currentPos));
+             cursor.style.left = `${currentPos}px`;
         }
     };
-
-    container.addEventListener('click', function (event) {
+      container.addEventListener('click', (event) => {
         dragging = true;
         moveHandler(event);
     });
-
-    cursor.addEventListener('mousedown', function (event) {
+     cursor.addEventListener('mousedown', (event) => {
         dragging = true;
-        //document.body.style.cursor = 'pointer';
         document.addEventListener('mousemove', moveHandler);
     });
-
-    document.addEventListener('mouseup', function (event) {
+     document.addEventListener('mouseup', (event) => {
         dragging = false;
-        //document.body.style.cursor = 'default;'
         document.removeEventListener('mousemove', moveHandler);
     });
-
-    cursor.addEventListener('touchstart', function (event) {
+     cursor.addEventListener('touchstart', (event) => {
         dragging = true;
     });
-
-    cursor.addEventListener('touchend', function (event) {
+     cursor.addEventListener('touchend', (event) => {
         dragging = false;
     });
-
-    cursor.addEventListener('touchmove', function (event) {
+     cursor.addEventListener('touchmove', (event) => {
         event.preventDefault();
         moveHandler(event.changedTouches[0]);
-    });
-})(window, undefined);
+    });*/
+})(window, document, undefined);
 //# sourceMappingURL=slider.js.map

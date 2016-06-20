@@ -9,14 +9,19 @@
 
     <body>
 
-        <div class="container">
-            <div class="slider">
-                <span class="cursor"></span>
-            </div>
-        </div>
+        <div id="red" class="container"></div>
+
+        <div id="green" class="container"></div>
+
+        <div id="blue" class="container"></div>
 
         <script src="//localhost:35729/livereload.js"></script>
         <script src="scripts/slider.js"></script>
+        <script>
+            var red = new Slider('#red', 0, 255, 1);
+            var green = new Slider('#green', 0, 255, 10);
+            var blue = new Slider('#blue', 0, 255, 40)
+        </script>
     </body>
 
 </html>
