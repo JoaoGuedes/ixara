@@ -40,7 +40,7 @@ setValue - set the actual value of the slider **/
                 } else if (mousePos - slider.getBoundingClientRect().left > slider.clientWidth) {
                     return slider.clientWidth - cursor.clientWidth;
                 } else {
-                    var value = mousePos - cursor.clientWidth - slider.getBoundingClientRect().left;
+                    var value = mousePos - cursor.clientWidth / 2 - slider.getBoundingClientRect().left;
                     return Math.min(slider.clientWidth - cursor.clientWidth, this.quantize(value, this.step));
                 }
             }
