@@ -16,3 +16,7 @@
     display: block;
     background-color: green;
 }
+
+.slider:hover, .cursor:hover {
+    cursor: pointer;
+}

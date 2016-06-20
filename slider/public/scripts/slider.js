@@ -6,11 +6,11 @@
         container = cursor.parentElement;
 
     var dragging = false,
-        step = 100;
+        step = 30;
 
-    var getPosition = function getPosition(position) {
+    var getPercentage = function getPercentage(position) {
         var result = position / (container.clientWidth - cursor.clientWidth);
-        return result;
+        return result * 100;
     };
 
     var getCurrentPosition = function getCurrentPosition(mousePos, cursor, container) {
@@ -19,8 +19,13 @@
         } else if (mousePos - container.getBoundingClientRect().left > container.clientWidth) {
             return container.clientWidth - cursor.clientWidth;
         } else {
-            return mousePos - cursor.clientWidth - container.getBoundingClientRect().left;
+            var value = mousePos - cursor.clientWidth - container.getBoundingClientRect().left;
+            return Math.min(container.clientWidth - cursor.clientWidth, quantize(value, step));
         }
+    };
+
+    var quantize = function quantize(value, step) {
+        return Math.round(value / step) * step;
     };
 
     var moveHandler = function moveHandler(event) {
@@ -28,19 +33,27 @@
             var pos = event.clientX,
                 currentPos = getCurrentPosition(pos, cursor, container);
 
-            console.log(getPosition(currentPos) * 255);
+            //console.log(Math.round(getPosition(currentPos) * 100));
+            console.log(getPercentage(currentPos));
 
             cursor.style.left = currentPos + 'px';
         }
     };
 
+    container.addEventListener('click', function (event) {
+        dragging = true;
+        moveHandler(event);
+    });
+
     cursor.addEventListener('mousedown', function (event) {
         dragging = true;
+        //document.body.style.cursor = 'pointer';
         document.addEventListener('mousemove', moveHandler);
     });
 
     document.addEventListener('mouseup', function (event) {
         dragging = false;
+        //document.body.style.cursor = 'default;'
         document.removeEventListener('mousemove', moveHandler);
     });
 
