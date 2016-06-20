@@ -35,14 +35,17 @@ setValue - set the actual value of the slider **/
         _createClass(Slider, [{
             key: 'getPosition',
             value: function getPosition(mousePos, cursor, slider) {
-                if (mousePos - cursor.clientWidth - slider.getBoundingClientRect().left <= 0) {
-                    return 0;
-                } else if (mousePos - slider.getBoundingClientRect().left > slider.clientWidth) {
-                    return slider.clientWidth - cursor.clientWidth;
-                } else {
-                    var value = mousePos - cursor.clientWidth / 2 - slider.getBoundingClientRect().left;
-                    return Math.min(slider.clientWidth - cursor.clientWidth, this.quantize(value, this.step));
-                }
+                var actualPos = mousePos - slider.getBoundingClientRect().left;
+                if (actualPos - cursor.clientWidth <= 0) {
+                    //mouse is behind lower limit
+                    return 0; //...return start position
+                } else if (actualPos > slider.clientWidth) {
+                        //mouse is after upper limit
+                        return slider.clientWidth - cursor.clientWidth; //...return end position
+                    } else {
+                            var value = actualPos - cursor.clientWidth / 2; //mouse is somewhere in between
+                            return Math.min(slider.clientWidth - cursor.clientWidth, this.quantize(value, this.step)); //...return end position or quantized step, whichever is smaller
+                        }
             }
         }, {
             key: 'quantize',
