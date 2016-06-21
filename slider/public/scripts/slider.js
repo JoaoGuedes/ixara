@@ -66,25 +66,28 @@ setValue - set the actual value of the slider **/
                         return endPos; //...return end position
                     } else {
                             var middlepoint = actualPos - this.cursor.clientWidth / 2; //mouse is somewhere in between
-                            return Math.min(endPos, this.quantize(middlepoint, this.step)); //...return end position or quantized step, whichever is smaller
+                            var quantized = this.quantize(middlepoint, this.step);
+                            return Math.min(endPos, quantized); //...return end position or quantized step, whichever is smaller
                         }
             }
         }, {
             key: 'quantize',
             value: function quantize(value, step) {
+                var endPos = this.slider.clientWidth - this.cursor.clientWidth;
+                step = step * endPos / this.max;
                 return Math.round(value / step) * step;
             }
         }, {
             key: 'move',
             value: function move(event, value) {
-
                 var position = 0;
+                var endPos = this.slider.clientWidth - this.cursor.clientWidth;
                 if (event && this.dragging) {
                     position = this.getDisplacement(event.clientX);
-                    this.value = (this.getPercentage(position) * this.max).toFixed(0); //FIXME
+                    this.value = position * this.max / endPos;
                 } else if (value) {
-                        position = value * (this.slider.clientWidth - this.cursor.clientWidth) / this.max;
-                    }
+                    position = value * endPos / this.max;
+                }
                 this.cursor.style.left = position + 'px';
             }
         }, {
