@@ -50,7 +50,7 @@ setValue - set the actual value of the slider **/
             key: 'getPercentage',
             value: function getPercentage(position) {
                 var result = position / (this.slider.clientWidth - this.cursor.clientWidth);
-                return result;
+                return result.toFixed(4);
             }
         }, {
             key: 'getDisplacement',
@@ -74,7 +74,7 @@ setValue - set the actual value of the slider **/
             key: 'quantize',
             value: function quantize(value, step) {
                 var endPos = this.slider.clientWidth - this.cursor.clientWidth;
-                step = step * endPos / this.max;
+                step = step * endPos / (this.max + Math.abs(this.min));
                 return Math.round(value / step) * step;
             }
         }, {
@@ -84,7 +84,8 @@ setValue - set the actual value of the slider **/
                 var endPos = this.slider.clientWidth - this.cursor.clientWidth;
                 if (event && this.dragging) {
                     position = this.getDisplacement(event.clientX);
-                    this.value = position * this.max / endPos;
+                    this.value = (this.min + (this.max - this.min) * this.getPercentage(position)).toFixed(0);
+                    console.log(this.getValue());
                 } else if (value) {
                     position = value * endPos / this.max;
                 }
