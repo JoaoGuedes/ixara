@@ -15,6 +15,9 @@ setValue - set the actual value of the slider **/
         function Slider(selector, min, max, step) {
             _classCallCheck(this, Slider);
 
+            this.min = min;
+            this.max = max;
+
             this.container = document.querySelector(selector);
 
             this.slider = document.createElement('div');
@@ -33,20 +36,37 @@ setValue - set the actual value of the slider **/
         }
 
         _createClass(Slider, [{
-            key: 'getPosition',
-            value: function getPosition(mousePos, cursor, slider) {
-                var actualPos = mousePos - slider.getBoundingClientRect().left;
-                var endPos = slider.clientWidth - cursor.clientWidth;
+            key: 'getValue',
+            value: function getValue() {
+                return this.value;
+            }
+        }, {
+            key: 'setValue',
+            value: function setValue(value) {
+                this.value = Math.min(value, this.max);
+                this.move(null, this.value);
+            }
+        }, {
+            key: 'getPercentage',
+            value: function getPercentage(position) {
+                var result = position / (this.slider.clientWidth - this.cursor.clientWidth);
+                return result;
+            }
+        }, {
+            key: 'getDisplacement',
+            value: function getDisplacement(mousePos) {
+                var actualPos = mousePos - this.slider.getBoundingClientRect().left;
+                var endPos = this.slider.clientWidth - this.cursor.clientWidth;
 
-                if (actualPos - cursor.clientWidth <= 0) {
+                if (actualPos - this.cursor.clientWidth / 2 <= 0) {
                     //mouse is behind lower limit
                     return 0; //...return start position
-                } else if (actualPos > slider.clientWidth) {
+                } else if (actualPos > this.slider.clientWidth) {
                         //mouse is after upper limit
                         return endPos; //...return end position
                     } else {
-                            var value = actualPos - cursor.clientWidth / 2; //mouse is somewhere in between
-                            return Math.min(endPos, this.quantize(value, this.step)); //...return end position or quantized step, whichever is smaller
+                            var middlepoint = actualPos - this.cursor.clientWidth / 2; //mouse is somewhere in between
+                            return Math.min(endPos, this.quantize(middlepoint, this.step)); //...return end position or quantized step, whichever is smaller
                         }
             }
         }, {
@@ -56,15 +76,16 @@ setValue - set the actual value of the slider **/
             }
         }, {
             key: 'move',
-            value: function move(event) {
-                if (this.dragging) {
-                    var pos = event.clientX;
-                    var currentPos = this.getPosition(pos, this.cursor, this.slider);
-                    //this.getPosition(pos, this.cursor, this.container);
-                    //console.log(Math.round(getPosition(currentPos) * 100));
-                    //console.log(getPercentage(currentPos));
-                    this.cursor.style.left = currentPos + 'px';
-                }
+            value: function move(event, value) {
+
+                var position = 0;
+                if (event && this.dragging) {
+                    position = this.getDisplacement(event.clientX);
+                    this.value = (this.getPercentage(position) * this.max).toFixed(0); //FIXME
+                } else if (value) {
+                        position = value * (this.slider.clientWidth - this.cursor.clientWidth) / this.max;
+                    }
+                this.cursor.style.left = position + 'px';
             }
         }, {
             key: 'addListeners',
@@ -78,7 +99,7 @@ setValue - set the actual value of the slider **/
 
                 this.cursor.addEventListener('mousedown', function (event) {
                     _this.dragging = true;
-                    _this.boundMove = _this.move.bind(_this); //To hold a reference for unregistering later
+                    _this.boundMove = _this.move.bind(_this); //Hold a reference for unregistering later
                     document.addEventListener('mousemove', _this.boundMove);
                 });
 
