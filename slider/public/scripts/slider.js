@@ -14,7 +14,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             this.options = options || {};
 
-            this.container = document.querySelector(selector);
+            this.container = document.body.querySelector(selector);
 
             this.slider = document.createElement('div');
             this.slider.className = this.options.sliderClass || 'slider';

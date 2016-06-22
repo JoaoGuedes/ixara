@@ -1,5 +1,4 @@
 .slider {
-    width: 100%;
     border-top: 0px;
     border-right: 1px solid black;
     border-bottom: 0px;
@@ -15,12 +14,6 @@
     box-sizing: border-box;
     display: block;
     background-color: green;
-}
-
-@media only screen and (min-width: 768px) {
-    .slider {
-        width: 500px;
-    }
 }
 
 .slider:hover, .cursor:hover {
