@@ -1,7 +1,11 @@
 .container {
-    width: 500px;
+    width: 300px;
     position: relative;
-    left: 10px;
+    left: 0px;
     top:0px;
     padding: 30px;
+}
+
+.pull-left {
+    float: left;
 }

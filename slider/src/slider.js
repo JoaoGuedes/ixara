@@ -1,21 +1,11 @@
-
-    /**
-     * getPercentage - return the percentage (0 - 1) representing the current slider position
-
-setPercentage - a method that takes a percentage (0 - 1) and sets the slider position accordingly
-
-getValue - return the actual value representing the current slider position
-
-setValue - set the actual value of the slider **/
-
 ((window, document, undefined) => {
 
     class Slider {
 
         constructor(selector, min, max, step) {
 
-            this.min = min;
-            this.max = max;
+            this.minValue = min;
+            this.maxValue = max;
 
             this.container = document.querySelector(selector);
 
@@ -31,159 +21,145 @@ setValue - set the actual value of the slider **/
             this.dragging = false;
             this.step = step;
 
+            this.viewWidth = this.slider.clientWidth - this.cursor.clientWidth;
+
+            this.setValue(this.minValue);
+
             this.addListeners();
         }
 
+        /**
+         * Validations and helpers for computing positions
+         */
+        isBehindLowerLimit(pos) {
+            return pos - this.cursor.clientWidth/2 <= 0;
+
+        }
+
+        normalize(mousePos) {
+            const posOnOrigin = mousePos - this.slider.getBoundingClientRect().left;
+
+            if (this.isBehindLowerLimit(posOnOrigin)) {                           //mouse is behind lower limit
+                return 0;                                                        //...return start position
+            }
+
+            const point = posOnOrigin - this.cursor.clientWidth/2;            //mouse is somewhere in between
+            return point;
+        }
+
+        quantize(value, step) {
+            const stepInPx = (step * this.viewWidth) / (this.maxValue - this.minValue);
+            const quantum = Math.round(value/stepInPx) * stepInPx;
+            return Math.min(this.viewWidth, quantum);
+        }
+
+        getPercentage() {
+            const result = this.viewValue / this.viewWidth;
+            return result.toFixed(4);
+        }
+
+        setPercentage(percentage) {
+            const total = this.maxValue - this.minValue;
+            const value = percentage * total + this.minValue;
+            this.setValue(value);
+        }
+
+        emit(value) {
+            var event = document.createEvent('Event');
+            event.initEvent('change', true, true);
+            event.data = value;
+            this.container.dispatchEvent(event);
+        }
+
+        /**
+         * Value (model) methods
+         */
         getValue() {
             return this.value;
         }
 
         setValue(value) {
-            this.value = Math.min(value, this.max);
-            this.move(null, this.value);
+            this.value = Math.min(Math.max(this.minValue, value), this.maxValue);
+            this.emit(this.value);
+            this.updateView();
         }
 
-        getPercentage(position) {
-            let result = position / (this.slider.clientWidth - this.cursor.clientWidth);
-            return result;
+        updateValue() {
+            const range = this.maxValue - this.minValue;
+            this.value = (this.minValue + (range * this.getPercentage())).toFixed(0);
+            this.emit(this.value);
         }
 
-        getDisplacement(mousePos) {
-            let actualPos = mousePos - this.slider.getBoundingClientRect().left;
-            const endPos = this.slider.clientWidth - this.cursor.clientWidth;
+        /**
+         * View methods
+         */
+        getView() {
+            return this.viewValue;
+        }
 
-            if (actualPos - this.cursor.clientWidth/2 <= 0) {                           //mouse is behind lower limit
-                return 0;                                                        //...return start position
-            } else if (actualPos > this.slider.clientWidth) {                         //mouse is after upper limit
-                return endPos;                                                   //...return end position
-            } else {
-                const middlepoint = actualPos - this.cursor.clientWidth/2;            //mouse is somewhere in between
-                return Math.min(endPos, this.quantize(middlepoint, this.step));  //...return end position or quantized step, whichever is smaller
+        setView(position) {
+            const quantized = this.quantize(this.normalize(position), this.step);
+            this.viewValue = quantized;
+            this.renderView();
+            this.updateValue();
+        }
+
+        updateView() {
+            const offset = this.value - this.minValue;
+            const total = this.maxValue - this.minValue;
+            const percentage = (offset / total).toFixed(4);
+            this.viewValue =  percentage * this.viewWidth;
+            this.renderView();
+        }
+
+        renderView() {
+            this.cursor.style.left = `${this.viewValue}px`;
+        }
+
+        /**
+         * Handlers and listeners
+         */
+        moveHandler(event) {
+            if (this.dragging) {
+                this.setView(event.clientX);
             }
-        }
-
-        quantize(value, step) {
-            return Math.round(value/step) * step;
-        }
-
-        move(event, value) {
-
-            let position = 0;
-            if (event && this.dragging) {
-                position = this.getDisplacement(event.clientX);
-                this.value = (this.getPercentage(position) * this.max).toFixed(0);  //FIXME
-            } else if (value) {
-                position = value * (this.slider.clientWidth - this.cursor.clientWidth) / this.max;
-            }
-            this.cursor.style.left = `${position}px`;
         }
 
         addListeners() {
 
             this.container.addEventListener('click', (event) => {
                 this.dragging = true;
-                this.move(event);
+                this.setView(event.clientX);
             });
 
-            this.cursor.addEventListener('mousedown', (event) => {
+            this.cursor.addEventListener('mousedown', () => {
                 this.dragging = true;
-                this.boundMove = this.move.bind(this);                          //Hold a reference for unregistering later
+                this.boundMove = this.moveHandler.bind(this);                          //Hold a reference for unregistering later
                 document.addEventListener('mousemove', this.boundMove);
             });
 
-            document.addEventListener('mouseup', (event) => {
+            document.addEventListener('mouseup', () => {
                 this.dragging = false;
                 document.removeEventListener('mousemove', this.boundMove);
             });
 
-            this.cursor.addEventListener('touchstart', (event) => {
+            this.cursor.addEventListener('touchstart', () => {
                 this.dragging = true;
             });
 
-            this.cursor.addEventListener('touchend', (event) => {
+            this.cursor.addEventListener('touchend', () => {
                 this.dragging = false;
             });
 
             this.cursor.addEventListener('touchmove', (event) => {
                 event.preventDefault();
-                this.move(event.changedTouches[0]);
+                this.setView(event.changedTouches[0].clientX);
             });
 
         }
 
-
-
     }
 
     window.Slider = Slider;
-
-    /*let cursor = document.querySelector('#foo.cursor'),
-        container = cursor.parentElement;
-
-    let dragging = false, step = 30;
-
-    let getPercentage = (position) => {
-        let result = position / (container.clientWidth - cursor.clientWidth);
-        return result * 100;
-    };
-
-    let getCurrentPosition = (mousePos, cursor, container) => {
-        var leftOffset = container.getBoundingClientRect().left;
-        console.log(leftOffset);
-        if ((mousePos - cursor.clientWidth - container.getBoundingClientRect().left) <= 0) {
-            return 0;
-        } else if (mousePos - container.getBoundingClientRect().left > container.clientWidth) {
-            return container.clientWidth - cursor.clientWidth;
-        } else {
-            const value = mousePos - cursor.clientWidth - container.getBoundingClientRect().left;
-            return Math.min(container.clientWidth - cursor.clientWidth, quantize(value, step));
-        }
-    };
-
-    let quantize = (value, step) => {
-        return Math.round(value/step) * step;
-    };
-
-    let moveHandler = (event) => {
-        if (dragging) {
-            let pos = event.clientX,
-                currentPos = getCurrentPosition(pos, cursor, container);
-            console.log(pos);
-
-            //console.log(Math.round(getPosition(currentPos) * 100));
-            //console.log(getPercentage(currentPos));
-
-            cursor.style.left = `${currentPos}px`;
-        }
-    };
-
-
-    container.addEventListener('click', (event) => {
-        dragging = true;
-        moveHandler(event);
-    });
-
-    cursor.addEventListener('mousedown', (event) => {
-        dragging = true;
-        document.addEventListener('mousemove', moveHandler);
-    });
-
-    document.addEventListener('mouseup', (event) => {
-        dragging = false;
-        document.removeEventListener('mousemove', moveHandler);
-    });
-
-    cursor.addEventListener('touchstart', (event) => {
-        dragging = true;
-    });
-
-    cursor.addEventListener('touchend', (event) => {
-        dragging = false;
-    });
-
-    cursor.addEventListener('touchmove', (event) => {
-        event.preventDefault();
-        moveHandler(event.changedTouches[0]);
-    });*/
 
 })(window, document, undefined);
