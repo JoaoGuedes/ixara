@@ -1,0 +1,21 @@
+.slider {
+    border-top: 0px;
+    border-right: 1px solid black;
+    border-bottom: 0px;
+    border-left: 1px solid black;
+    box-sizing: border-box;
+    background-color: #faebd7;
+}
+
+.cursor {
+    position: relative;
+    width: 30px;
+    height: 90px;
+    box-sizing: border-box;
+    display: block;
+    background-color: green;
+}
+
+.slider:hover, .cursor:hover {
+    cursor: pointer;
+}

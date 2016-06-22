@@ -1,0 +1,50 @@
+.square {
+    width: 120px;
+    height: 120px;
+    border: 5px solid #afafaf;
+}
+
+.draggable-container {
+    position: absolute;
+}
+
+
+
+.draggable-slider-container {
+    box-sizing: border-box;
+    position: absolute;
+    width: 130px;
+    right: 0px;
+    top: -3px;
+}
+
+.draggable-slider-cursor {
+    position: relative;
+    width: 25px;
+    height: 25px;
+    border-radius: 15px;
+    box-sizing: border-box;
+    display: block;
+    background-color: green;
+}
+
+@media only screen and (min-width: 768px) {
+    .draggable-slider-cursor {
+        width: 10px;
+        height: 10px;
+    }
+
+    .draggable-slider-container {
+        width: 30px;
+        height: 10px;
+        right: 0;
+    }
+}
+
+.draggable-slider {
+    box-sizing: border-box;
+}
+
+.square:hover, .draggable-slider-container:hover {
+    cursor: pointer;
+}
