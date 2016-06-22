@@ -102,40 +102,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 this.updateView();
             }
         }, {
-<<<<<<< HEAD
-            key: 'getPercentage',
-            value: function getPercentage(position) {
-                var result = position / (this.slider.clientWidth - this.cursor.clientWidth);
-                return result.toFixed(4);
-=======
             key: 'updateValue',
             value: function updateValue() {
                 var range = this.maxValue - this.minValue;
                 this.value = (this.minValue + range * this.getPercentage()).toFixed(0);
                 this.emit(this.value);
->>>>>>> final
             }
 
-<<<<<<< HEAD
-                if (actualPos - this.cursor.clientWidth / 2 <= 0) {
-                    //mouse is behind lower limit
-                    return 0; //...return start position
-                } else if (actualPos > this.slider.clientWidth) {
-                        //mouse is after upper limit
-                        return endPos; //...return end position
-                    } else {
-                            var middlepoint = actualPos - this.cursor.clientWidth / 2; //mouse is somewhere in between
-                            var quantized = this.quantize(middlepoint, this.step);
-                            return Math.min(endPos, quantized); //...return end position or quantized step, whichever is smaller
-                        }
-            }
-        }, {
-            key: 'quantize',
-            value: function quantize(value, step) {
-                var endPos = this.slider.clientWidth - this.cursor.clientWidth;
-                step = step * endPos / (this.max + Math.abs(this.min));
-                return Math.round(value / step) * step;
-=======
             /**
              * View methods
              */
@@ -166,7 +139,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: 'renderView',
             value: function renderView() {
                 this.cursor.style.left = this.viewValue + 'px';
->>>>>>> final
             }
 
             /**
@@ -174,26 +146,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
              */
 
         }, {
-<<<<<<< HEAD
-            key: 'move',
-            value: function move(event, value) {
-                var position = 0;
-                var endPos = this.slider.clientWidth - this.cursor.clientWidth;
-                if (event && this.dragging) {
-                    position = this.getDisplacement(event.clientX);
-                    this.value = (this.min + (this.max - this.min) * this.getPercentage(position)).toFixed(0);
-                    console.log(this.getValue());
-                } else if (value) {
-                    position = value * endPos / this.max;
-                }
-                this.cursor.style.left = position + 'px';
-=======
             key: 'moveHandler',
             value: function moveHandler(event) {
                 if (this.dragging) {
                     this.setView(event.clientX);
                 }
->>>>>>> final
             }
         }, {
             key: 'addListeners',
