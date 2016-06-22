@@ -2,6 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Slider</title>
         <link rel="stylesheet" href="styles/styles.css">
         <link rel="stylesheet" href="styles/slider.css">
@@ -9,45 +10,72 @@
 
     <body>
 
-        <div id="red" class="container"></div>
+        <!-- Red -->
+        <div>
+            <div id="red-slider" class="container"></div>
+            <div class="rgbbox">
+                <span id="red-rgb" class="square"></span>
+            </div>
+        </div>
 
-        <h3 id="red-rgb" class="pull-left"></h3>
+        <!-- Green -->
+        <div>
+            <div id="green-slider" class="container"></div>
+            <div class="rgbbox">
+                <span id="green-rgb" class="square"></span>
+            </div>
+        </div>
 
-        <div id="green" class="container"></div>
-
-        <h3 id="green-rgb" class="pull-left"></h3>
-
-        <div id="blue" class="container"></div>
-
-        <h3 id="blue-rgb" class="pull-left"></h3>
+        <!-- Blue -->
+        <div>
+            <div id="blue-slider" class="container"></div>
+            <div class="rgbbox">
+                <span id="blue-rgb" class="square"></span>
+            </div>
+        </div>
 
         <script src="//localhost:35729/livereload.js"></script>
         <script src="scripts/slider.js"></script>
         <script>
             (function() {
-                var red = new Slider('#red', 0, 255, 1);
-                var green = new Slider('#green', -15, 4, 4);
-                var blue = new Slider('#blue', 0, 255, 9);
 
-                redEl = document.querySelector('#red');
-                greenEl = document.querySelector('#green');
-                blueEl = document.querySelector('#blue');
+                var red = new Slider('#red-slider', 0, 255, 1);
+                var green = new Slider('#green-slider', 0, 255, 5);
+                var blue = new Slider('#blue-slider', 0, 255, 9);
+
+                redEl = document.querySelector('#red-slider');
+                greenEl = document.querySelector('#green-slider');
+                blueEl = document.querySelector('#blue-slider');
+
+                redBox = document.querySelector('#red-rgb');
+                greenBox = document.querySelector('#green-rgb');
+                blueBox = document.querySelector('#blue-rgb');
 
                 function update(selector, data) {
-                    document.querySelector(selector).innerHTML = data;
+                    var element = document.querySelector(selector);
                 }
 
                 redEl.addEventListener('change', function(event) {
-                    update('#red-rgb', event.data);
+                    var template = 'rgb(%d,0,0)';
+                    redBox.style.backgroundColor = template.replace('%d', event.data.value);
                 });
 
                 greenEl.addEventListener('change', function(event) {
-                    update('#green-rgb', event.data);
+                    var template = 'rgb(0,%d,0)';
+                    greenBox.style.backgroundColor = template.replace('%d', event.data.value);
                 });
 
                 blueEl.addEventListener('change', function(event) {
-                    update('#blue-rgb', event.data);
+                    var template = 'rgb(0,0,%d)';
+                    blueBox.style.backgroundColor = template.replace('%d', event.data.value);
                 });
+
+                window.sliders = {
+                    red: red,
+                    green: green,
+                    blue: blue
+                };
+
             })();
 
         </script>

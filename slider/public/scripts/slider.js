@@ -6,19 +6,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 (function (window, document, undefined) {
     var Slider = function () {
-        function Slider(selector, min, max, step) {
+        function Slider(selector, min, max, step, options) {
             _classCallCheck(this, Slider);
 
             this.minValue = min;
             this.maxValue = max;
 
+            this.options = options || {};
+
             this.container = document.querySelector(selector);
 
             this.slider = document.createElement('div');
-            this.slider.className = 'slider';
+            this.slider.className = this.options.sliderClass || 'slider';
 
             this.cursor = document.createElement('span');
-            this.cursor.className = 'cursor';
+            this.cursor.className = this.options.cursorClass || 'cursor';
 
             this.slider.appendChild(this.cursor);
             this.container.appendChild(this.slider);
@@ -26,9 +28,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this.dragging = false;
             this.step = step;
 
-            this.viewWidth = this.slider.clientWidth - this.cursor.clientWidth;
+            this.viewWidth = this.slider.clientWidth - this.cursor.clientWidth; //Slider viewport width
+            this.valueWidth = this.maxValue - this.minValue; //Slider model total range
 
-            this.setValue(this.minValue);
+            this.event = document.createEvent('Event');
+
+            this.setValue(this.minValue); //Initialize slider
 
             this.addListeners();
         }
@@ -43,10 +48,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function isBehindLowerLimit(pos) {
                 return pos - this.cursor.clientWidth / 2 <= 0;
             }
+
+            /* Receives mouse position and translates to slider coordinates */
+
         }, {
             key: 'normalize',
             value: function normalize(mousePos) {
-                var posOnOrigin = mousePos - this.slider.getBoundingClientRect().left;
+                var posOnOrigin = mousePos - this.slider.getBoundingClientRect().left; //Translated position on origin
 
                 if (this.isBehindLowerLimit(posOnOrigin)) {
                     //mouse is behind lower limit
@@ -56,12 +64,27 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var point = posOnOrigin - this.cursor.clientWidth / 2; //mouse is somewhere in between
                 return point;
             }
+
+            /* Quantizes received mouse coordinates into slider steps coordinates */
+
         }, {
             key: 'quantize',
             value: function quantize(value, step) {
-                var stepInPx = step * this.viewWidth / (this.maxValue - this.minValue);
-                var quantum = Math.round(value / stepInPx) * stepInPx;
-                return Math.min(this.viewWidth, quantum);
+                var stepInPx = step * this.viewWidth / this.valueWidth; //step in slider coordinates
+                var quantum = Math.round(value / stepInPx) * stepInPx; //compute discrete slider values
+                return Math.min(this.viewWidth, quantum); //minimum between end position and quantum
+            }
+
+            /* Emit change event */
+
+        }, {
+            key: 'emit',
+            value: function emit(value) {
+                this.event.initEvent('change', true, true);
+                this.event.data = {
+                    value: value
+                };
+                this.container.dispatchEvent(this.event);
             }
         }, {
             key: 'getPercentage',
@@ -69,20 +92,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var result = this.viewValue / this.viewWidth;
                 return result.toFixed(4);
             }
+
+            /* Set model value in percentage and update view */
+
         }, {
             key: 'setPercentage',
             value: function setPercentage(percentage) {
-                var total = this.maxValue - this.minValue;
-                var value = percentage * total + this.minValue;
+                var value = percentage * this.valueWidth + this.minValue;
                 this.setValue(value);
-            }
-        }, {
-            key: 'emit',
-            value: function emit(value) {
-                var event = document.createEvent('Event');
-                event.initEvent('change', true, true);
-                event.data = value;
-                this.container.dispatchEvent(event);
             }
 
             /**
@@ -94,6 +111,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function getValue() {
                 return this.value;
             }
+
+            /* Compute model value from view value */
+
+        }, {
+            key: 'getValueFromView',
+            value: function getValueFromView() {
+                return (this.minValue + this.valueWidth * this.getPercentage()).toFixed(0);
+            }
+
+            /* Set model value and update view */
+
         }, {
             key: 'setValue',
             value: function setValue(value) {
@@ -101,11 +129,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 this.emit(this.value);
                 this.updateView();
             }
+
+            /* Update model value based on view value */
+
         }, {
             key: 'updateValue',
             value: function updateValue() {
-                var range = this.maxValue - this.minValue;
-                this.value = (this.minValue + range * this.getPercentage()).toFixed(0);
+                this.value = this.getValueFromView();
                 this.emit(this.value);
             }
 
@@ -118,23 +148,39 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function getView() {
                 return this.viewValue;
             }
+
+            /* Compute view value from model value */
+
+        }, {
+            key: 'getViewFromValue',
+            value: function getViewFromValue() {
+                var offset = this.value - this.minValue;
+                var percentage = (offset / this.valueWidth).toFixed(4);
+                return percentage * this.viewWidth;
+            }
+
+            /* Set view value and update model value */
+
         }, {
             key: 'setView',
             value: function setView(position) {
                 var quantized = this.quantize(this.normalize(position), this.step);
                 this.viewValue = quantized;
-                this.renderView();
                 this.updateValue();
+                this.renderView();
             }
+
+            /* Update view based on model value */
+
         }, {
             key: 'updateView',
             value: function updateView() {
-                var offset = this.value - this.minValue;
-                var total = this.maxValue - this.minValue;
-                var percentage = (offset / total).toFixed(4);
-                this.viewValue = percentage * this.viewWidth;
+                this.viewValue = this.getViewFromValue();
                 this.renderView();
             }
+
+            /* Translate slider according to view value */
+
         }, {
             key: 'renderView',
             value: function renderView() {
