@@ -11,16 +11,45 @@
 
         <div id="red" class="container"></div>
 
+        <h3 id="red-rgb" class="pull-left"></h3>
+
         <div id="green" class="container"></div>
 
+        <h3 id="green-rgb" class="pull-left"></h3>
+
         <div id="blue" class="container"></div>
+
+        <h3 id="blue-rgb" class="pull-left"></h3>
 
         <script src="//localhost:35729/livereload.js"></script>
         <script src="scripts/slider.js"></script>
         <script>
-            var red = new Slider('#red', 0, 255, 1);
-            var green = new Slider('#green', -8, 4, 3);
-            var blue = new Slider('#blue', -10, 10, 3);
+            (function() {
+                var red = new Slider('#red', 0, 255, 1);
+                var green = new Slider('#green', -15, 4, 4);
+                var blue = new Slider('#blue', 0, 255, 9);
+
+                redEl = document.querySelector('#red');
+                greenEl = document.querySelector('#green');
+                blueEl = document.querySelector('#blue');
+
+                function update(selector, data) {
+                    document.querySelector(selector).innerHTML = data;
+                }
+
+                redEl.addEventListener('change', function(event) {
+                    update('#red-rgb', event.data);
+                });
+
+                greenEl.addEventListener('change', function(event) {
+                    update('#green-rgb', event.data);
+                });
+
+                blueEl.addEventListener('change', function(event) {
+                    update('#blue-rgb', event.data);
+                });
+            })();
+
         </script>
     </body>
 
