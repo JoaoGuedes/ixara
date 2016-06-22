@@ -12,10 +12,10 @@
             this.container = document.body.querySelector(selector);
 
             this.slider = document.createElement('div');
-            this.slider.className = this.options.sliderClass || 'slider';
+            this.slider.className = `slider-base ${this.options.sliderClass || 'slider'}`;
 
             this.cursor = document.createElement('span');
-            this.cursor.className = this.options.cursorClass || 'cursor';
+            this.cursor.className = `cursor-base ${this.options.cursorClass || 'cursor'}`;
 
             this.slider.appendChild(this.cursor);
             this.container.appendChild(this.slider);

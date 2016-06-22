@@ -12,7 +12,6 @@
 
 
 .draggable-slider-container {
-    box-sizing: border-box;
     position: absolute;
     width: 130px;
     right: 0px;
@@ -20,12 +19,9 @@
 }
 
 .draggable-slider-cursor {
-    position: relative;
     width: 25px;
     height: 25px;
     border-radius: 15px;
-    box-sizing: border-box;
-    display: block;
     background-color: green;
 }
 
@@ -40,10 +36,6 @@
         height: 10px;
         right: 0;
     }
-}
-
-.draggable-slider {
-    box-sizing: border-box;
 }
 
 .square:hover, .draggable-slider-container:hover {

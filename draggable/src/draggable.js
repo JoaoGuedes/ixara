@@ -2,77 +2,82 @@
 
     class Draggable {
 
+        /**
+        * Constructor and DOM creation
+        **/
         constructor(selector, options) {
-
-            this.options = this.options || {};
-
+            this.options = options || {};
             this.container = document.body.querySelector(selector);
             this.container.className = this.options.containerClass || 'draggable-container';
             this.createSlider();
             this.createSquare();
-            this.dragging = false;
-
-            this.addListeners();
+            this.addViewListeners();
         }
 
         createSlider() {
-            this.sliderElement = document.createElement('div');
-            this.sliderElement.className = 'draggable-slider-container';
-            this.sliderElement.id = 'slider';
+            let sliderElement = document.createElement('div');
+            sliderElement.className = 'draggable-slider-container';
+            sliderElement.id = 'slider';
 
-            this.container.appendChild(this.sliderElement);
+            this.container.appendChild(sliderElement);
 
             this.slider = new Slider('#slider', 0, 25, 1, {
                 sliderClass: 'draggable-slider',
                 cursorClass: 'draggable-slider-cursor'
+            });
+
+            sliderElement.addEventListener('change', (event) => {
+                this.square.style.borderRadius = `${event.data.value}px`;
             });
         }
 
         createSquare() {
             this.square = document.createElement('div');
             this.square.className = this.options.squareClass || 'square';
-
             this.container.appendChild(this.square);
         }
 
         /**
-         * Handlers and listeners
-         */
-        moveHandler(event) {
-            if (this.dragging) {
-                this.renderView(event.clientX,event.clientY);
-            }
+        * Get value within [lower,upper]
+        **/
+        clip(value, lower, upper) {
+            return Math.max(lower, Math.min(value,upper));
         }
 
         /* Translate square */
         renderView(x,y) {
-            x = x - this.startX;
-            y = y - this.startY;
-            this.container.style.left = `${x}px`;
-            this.container.style.top = `${y}px`;
+            const windowMaxX = window.innerWidth - this.container.clientWidth;
+            const windowMaxY = window.innerHeight - this.container.clientHeight;
+            const xView = this.clip(x - this.startX, 0, windowMaxX); //get clipped value of "x - this.startX" (current pos - position within square)
+            const yView = this.clip(y - this.startY, 0, windowMaxY); //same for y
+            this.container.style.left = `${xView}px`;
+            this.container.style.top = `${yView}px`;
         }
 
-        addListeners() {
+        /**
+        * Handlers and listeners
+        */
+        moveHandler(event) {
+            this.renderView(event.clientX,event.clientY);
+        }
 
-            this.sliderElement.addEventListener('change', (event) => {
-                this.square.style.borderRadius = `${event.data.value}px`;
-            });
+        addViewListeners() {
 
             this.square.addEventListener('mousedown', (event) => {
-                this.dragging = true;
-                this.boundMove = this.moveHandler.bind(this);
-                this.startX = event.offsetX;
+                this.boundMove = this.moveHandler.bind(this); //For unregistering the event on mouseup
+                this.startX = event.offsetX;                  //Store mouse position within square
                 this.startY = event.offsetY;
                 document.addEventListener('mousemove', this.boundMove);
             });
 
             document.addEventListener('mouseup', () => {
-                this.dragging = false;
+                this.startX = undefined;
+                this.startY = undefined;
                 document.removeEventListener('mousemove', this.boundMove);
             });
 
-            this.square.addEventListener('touchstart', (event) => {
-                this.startX = this.square.clientWidth/2;
+            this.square.addEventListener('touchstart', () => {
+                this.startX = this.square.clientWidth/2;      //In mobile, dragging feels better when dragging the middle of the item
                 this.startY = this.square.clientWidth/2;
             });
 
