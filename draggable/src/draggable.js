@@ -40,17 +40,14 @@
          */
         moveHandler(event) {
             if (this.dragging) {
-                this.renderView(event.clientX, event.clientY);
+                this.renderView(event.clientX,event.clientY);
             }
         }
 
-        normalize(value) {
-            return value - this.square.clientWidth / 2;
-        }
         /* Translate square */
         renderView(x,y) {
-            x = this.normalize(x);
-            y = this.normalize(y);
+            x = x - this.startX;
+            y = y - this.startY;
             this.container.style.left = `${x}px`;
             this.container.style.top = `${y}px`;
         }
@@ -61,9 +58,11 @@
                 this.square.style.borderRadius = `${event.data.value}px`;
             });
 
-            this.square.addEventListener('mousedown', () => {
+            this.square.addEventListener('mousedown', (event) => {
                 this.dragging = true;
                 this.boundMove = this.moveHandler.bind(this);
+                this.startX = event.offsetX;
+                this.startY = event.offsetY;
                 document.addEventListener('mousemove', this.boundMove);
             });
 
@@ -72,16 +71,12 @@
                 document.removeEventListener('mousemove', this.boundMove);
             });
 
-            this.square.addEventListener('touchstart', () => {
-                this.dragging = true;
-            });
-
-            this.square.addEventListener('touchend', () => {
-                this.dragging = false;
+            this.square.addEventListener('touchstart', (event) => {
+                this.startX = this.square.clientWidth/2;
+                this.startY = this.square.clientWidth/2;
             });
 
             this.square.addEventListener('touchmove', (event) => {
-                event.preventDefault();
                 this.renderView(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
             });
 

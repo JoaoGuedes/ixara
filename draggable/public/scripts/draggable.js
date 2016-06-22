@@ -54,18 +54,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     this.renderView(event.clientX, event.clientY);
                 }
             }
-        }, {
-            key: 'normalize',
-            value: function normalize(value) {
-                return value - this.square.clientWidth / 2;
-            }
+
             /* Translate square */
 
         }, {
             key: 'renderView',
             value: function renderView(x, y) {
-                x = this.normalize(x);
-                y = this.normalize(y);
+                x = x - this.startX;
+                y = y - this.startY;
                 this.container.style.left = x + 'px';
                 this.container.style.top = y + 'px';
             }
@@ -78,9 +74,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     _this.square.style.borderRadius = event.data.value + 'px';
                 });
 
-                this.square.addEventListener('mousedown', function () {
+                this.square.addEventListener('mousedown', function (event) {
                     _this.dragging = true;
                     _this.boundMove = _this.moveHandler.bind(_this);
+                    _this.startX = event.offsetX;
+                    _this.startY = event.offsetY;
                     document.addEventListener('mousemove', _this.boundMove);
                 });
 
@@ -89,16 +87,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     document.removeEventListener('mousemove', _this.boundMove);
                 });
 
-                this.square.addEventListener('touchstart', function () {
-                    _this.dragging = true;
-                });
-
-                this.square.addEventListener('touchend', function () {
-                    _this.dragging = false;
+                this.square.addEventListener('touchstart', function (event) {
+                    _this.startX = _this.square.clientWidth / 2;
+                    _this.startY = _this.square.clientWidth / 2;
                 });
 
                 this.square.addEventListener('touchmove', function (event) {
-                    event.preventDefault();
                     _this.renderView(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
                 });
             }
