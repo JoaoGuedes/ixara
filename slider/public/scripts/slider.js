@@ -5,45 +5,166 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 (function (window, document, undefined) {
+    var Emitter = function () {
+        function Emitter() {
+            _classCallCheck(this, Emitter);
+        }
+
+        _createClass(Emitter, null, [{
+            key: 'emit',
+            value: function emit(type, data) {
+                var event = document.createEvent('Event');
+                event.initEvent(type, true, true);
+                event.data = data;
+                if (this._origin) {
+                    this._origin.dispatchEvent(event);
+                }
+            }
+        }, {
+            key: 'origin',
+            set: function set(element) {
+                this._origin = element;
+            }
+        }]);
+
+        return Emitter;
+    }();
+
+    var Model = function () {
+        function Model(min, max) {
+            _classCallCheck(this, Model);
+
+            this.min = min;
+            this.max = max;
+            this.range = max - min;
+            this._value = this.min;
+        }
+
+        _createClass(Model, [{
+            key: 'value',
+            get: function get() {
+                return this._value;
+            },
+            set: function set(num) {
+                this._value = Math.min(Math.max(this.min, num), this.max);
+                Emitter.emit('change', { value: this._value });
+                Emitter.emit('updateView', {
+                    min: this.min,
+                    max: this.max,
+                    range: this.range,
+                    value: this._value
+                });
+            }
+        }]);
+
+        return Model;
+    }();
+
+    var View = function () {
+        function View(container, slider, cursor) {
+            _classCallCheck(this, View);
+
+            this.container = container;
+            this.slider = slider;
+            this.cursor = cursor;
+            this.width = this.slider.clientWidth - this.cursor.clientWidth;
+            this._value = 0;
+            this.listen();
+        }
+
+        /* Set view value and update model value */
+
+
+        _createClass(View, [{
+            key: 'setView',
+            value: function setView(position) {
+                var quantized = this.quantize(this.normalize(position), this.step);
+                this.viewValue = quantized;
+                this.updateValue();
+                this.renderView();
+            }
+
+            /* Compute view value from model value */
+
+        }, {
+            key: 'getViewFromValue',
+            value: function getViewFromValue(min, range, value) {
+                var offset = value - min;
+                var percentage = (offset / range).toFixed(4);
+                return percentage * this.width;
+            }
+
+            /* Update view based on model value */
+
+        }, {
+            key: 'updateView',
+            value: function updateView(event) {
+                var data = event.data;
+                this._value = this.getViewFromValue(data.min, data.range, data.value);
+                this.renderView();
+            }
+
+            /* Translate slider according to view value */
+
+        }, {
+            key: 'renderView',
+            value: function renderView() {
+                this.cursor.style.left = this._value + 'px';
+            }
+        }, {
+            key: 'listen',
+            value: function listen() {
+                this.container.addEventListener('updateView', this.updateView.bind(this));
+            }
+        }]);
+
+        return View;
+    }();
+
     var Slider = function () {
         function Slider(selector, min, max, step, options) {
             _classCallCheck(this, Slider);
-
-            this.minValue = min;
-            this.maxValue = max;
 
             this.options = options || {};
 
             this.container = document.body.querySelector(selector);
 
-            this.slider = document.createElement('div');
-            this.slider.className = 'slider-base ' + (this.options.sliderClass || 'slider');
-
-            this.cursor = document.createElement('span');
-            this.cursor.className = 'cursor-base ' + (this.options.cursorClass || 'cursor');
+            this.createSlider();
+            this.createCursor();
 
             this.slider.appendChild(this.cursor);
             this.container.appendChild(this.slider);
 
-            this.dragging = false;
             this.step = step;
 
-            this.viewWidth = this.slider.clientWidth - this.cursor.clientWidth; //Slider viewport width
-            this.valueWidth = this.maxValue - this.minValue; //Slider model total range
+            Emitter.origin = this.container;
 
-            this.event = document.createEvent('Event');
+            this.model = new Model(min, max);
+            this.view = new View(this.container, this.slider, this.cursor);
 
-            this.setValue(this.minValue); //Initialize slider
+            this.model.value = this.minValue;
 
             this.addListeners();
         }
 
-        /**
-         * Validations and helpers for computing positions
-         */
-
-
         _createClass(Slider, [{
+            key: 'createSlider',
+            value: function createSlider() {
+                this.slider = document.createElement('div');
+                this.slider.className = 'slider-base ' + (this.options.sliderClass || 'slider');
+            }
+        }, {
+            key: 'createCursor',
+            value: function createCursor() {
+                this.cursor = document.createElement('span');
+                this.cursor.className = 'cursor-base ' + (this.options.cursorClass || 'cursor');
+            }
+
+            /**
+             * Validations and helpers for computing positions
+             */
+
+        }, {
             key: 'isBehindLowerLimit',
             value: function isBehindLowerLimit(pos) {
                 return pos - this.cursor.clientWidth / 2 <= 0;
@@ -70,21 +191,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'quantize',
             value: function quantize(value, step) {
-                var stepInPx = step * this.viewWidth / this.valueWidth; //step in slider coordinates
+                var stepInPx = step * this.viewWidth / this.model.range; //step in slider coordinates
                 var quantum = Math.round(value / stepInPx) * stepInPx; //compute discrete slider values
                 return Math.min(this.viewWidth, quantum); //minimum between end position and quantum
-            }
-
-            /* Emit change event */
-
-        }, {
-            key: 'emit',
-            value: function emit(value) {
-                this.event.initEvent('change', true, true);
-                this.event.data = {
-                    value: value
-                };
-                this.container.dispatchEvent(this.event);
             }
         }, {
             key: 'getPercentage',
@@ -98,7 +207,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'setPercentage',
             value: function setPercentage(percentage) {
-                var value = percentage * this.valueWidth + this.minValue;
+                var value = percentage * this.model.range + this.minValue;
                 this.setValue(value);
             }
 
@@ -117,7 +226,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'getValueFromView',
             value: function getValueFromView() {
-                return (this.minValue + this.valueWidth * this.getPercentage()).toFixed(0);
+                return (this.minValue + this.model.range * this.getPercentage()).toFixed(0);
             }
 
             /* Set model value and update view */
@@ -155,7 +264,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: 'getViewFromValue',
             value: function getViewFromValue() {
                 var offset = this.value - this.minValue;
-                var percentage = (offset / this.valueWidth).toFixed(4);
+                var percentage = (offset / this.model.range).toFixed(4);
                 return percentage * this.viewWidth;
             }
 
@@ -194,9 +303,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'moveHandler',
             value: function moveHandler(event) {
-                if (this.dragging) {
-                    this.setView(event.clientX);
-                }
+                this.setView(event.clientX);
             }
         }, {
             key: 'addListeners',
@@ -204,27 +311,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var _this = this;
 
                 this.container.addEventListener('click', function (event) {
-                    _this.dragging = true;
                     _this.setView(event.clientX);
                 });
 
                 this.cursor.addEventListener('mousedown', function () {
-                    _this.dragging = true;
                     _this.boundMove = _this.moveHandler.bind(_this); //Hold a reference for unregistering later
                     document.addEventListener('mousemove', _this.boundMove);
                 });
 
                 document.addEventListener('mouseup', function () {
-                    _this.dragging = false;
                     document.removeEventListener('mousemove', _this.boundMove);
-                });
-
-                this.cursor.addEventListener('touchstart', function () {
-                    _this.dragging = true;
-                });
-
-                this.cursor.addEventListener('touchend', function () {
-                    _this.dragging = false;
                 });
 
                 this.cursor.addEventListener('touchmove', function (event) {
